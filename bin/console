@@ -2,7 +2,7 @@
 # frozen_string_literal: true
 
 require "bundler/setup"
-require "capybara/charai/driver"
+require "charai"
 
 require "pry"
 Pry.start

@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-require_relative "lib/capybara/charai/driver/version"
+require_relative "lib/charai/version"
 
 Gem::Specification.new do |spec|
-  spec.name = "capybara-charai-driver"
-  spec.version = Capybara::Charai::Driver::VERSION
+  spec.name = "charai"
+  spec.version = Charai::VERSION
   spec.authors = ["YusukeIwaki"]
   spec.email = ["q7w8e9w8q7w8e9@yahoo.co.jp"]
 
-  spec.summary = "charai(Chat + Ruby + AI) driver for Capybara"
+  spec.summary = "charai(Chat + Ruby + AI) Capybara driver"
   spec.description = "Prototype impl for Kaigi on Rails 2024 presentation."
-  spec.homepage = "https://github.com/YusukeIwaki/capybara-charai-driver"
+  spec.homepage = "https://github.com/YusukeIwaki/charai"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
