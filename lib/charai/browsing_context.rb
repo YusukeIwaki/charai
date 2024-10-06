@@ -30,6 +30,10 @@ module Charai
       realms.find { |realm| realm.type == 'window' }
     end
 
+    def activate
+      bidi_call_async('browsingContext.activate').value!
+    end
+
     def capture_screenshot(origin: nil, format: nil, clip: nil)
       result = bidi_call_async('browsingContext.captureScreenshot', {
         origin: origin,
