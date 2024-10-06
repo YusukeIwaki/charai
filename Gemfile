@@ -5,6 +5,8 @@ source "https://rubygems.org"
 gemspec
 
 gem "pry-byebug"
+gem "puma"
 gem "rake"
 gem "rspec"
 gem "rubocop"
+gem "sinatra", require: false

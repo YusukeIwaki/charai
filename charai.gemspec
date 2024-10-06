@@ -29,5 +29,7 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
+  spec.add_dependency 'capybara'
   spec.add_dependency "concurrent-ruby", ">= 1.1.6"
+  spec.add_dependency "websocket-driver", ">= 0.6.1"
 end
