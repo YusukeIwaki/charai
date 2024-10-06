@@ -23,6 +23,7 @@ RSpec.describe 'local app example' do
       HTML
     end
 
+    Capybara.current_session.visit '/'
     Capybara.current_session.driver << <<~TEXT
     どうも
     TEXT
