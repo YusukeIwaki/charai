@@ -5,6 +5,7 @@ RSpec.describe 'local app example' do
     @sinatra.get('/') do
       <<~HTML
       <h1>It works!</h1>
+      <textarea></textarea>
       <script type="text/javascript">
       for (let i = 0; i < 100; i++) {
         const a = document.createElement('a')

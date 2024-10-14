@@ -36,7 +36,6 @@ module Charai
     def close
       bidi_call_async('browser.close').value!
       @web_socket.close
-      @thread.join
     end
 
     def bidi_call_async(method_, params = {})
@@ -95,6 +94,7 @@ module Charai
       case method_
       when 'browsingContext.contextCreated'
         browsing_context_id = params['context']
+        return unless browsing_context_id
         return unless browsing_context_id.split("-").count == 5
         @browsing_contexts[browsing_context_id] ||= BrowsingContext.new(self, browsing_context_id)
         if params['url']

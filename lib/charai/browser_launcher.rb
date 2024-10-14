@@ -161,9 +161,9 @@ module Charai
         end
       end
     rescue EOFError
-      raise LaunchError.new(lines.join("\n"))
+      raise lines.join("\n")
     rescue Timeout::Error
-      raise LaunchError.new("Timed out after 30 seconds while trying to connect to the browser.")
+      raise "Timed out after 30 seconds while trying to connect to the browser."
     end
   end
 end

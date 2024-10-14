@@ -2,6 +2,11 @@
 
 module Charai
   class Driver < ::Capybara::Driver::Base
+    class << self
+      # global browser instance
+      attr_accessor :__browser
+    end
+
     def initialize(_app, **options)
       @headless = options[:headless]
       @debug_protocol = %w[1 true].include?(ENV['DEBUG'])
@@ -34,12 +39,18 @@ module Charai
 
     private
 
+    def input_tool
+      InputTool.new(browsing_context)
+    end
+
     def browser
-      @browser ||= Browser.launch(headless: @headless, debug_protocol: @debug_protocol)
+      Driver.__browser ||= Browser.launch(headless: @headless, debug_protocol: @debug_protocol)
     end
 
     def browsing_context
-      @browsing_context ||= browser.create_browsing_context
+      @browsing_context ||= browser.create_browsing_context.tap do |context|
+        context.set_viewport(width: 1280, height: 1024)
+      end
     end
   end
 end

@@ -16,12 +16,12 @@ module Charai
 
     def realms
       result = bidi_call_async('script.getRealms').value!
-      result[:realms].map do |realm|
+      result['realms'].map do |realm|
         Realm.new(
           browsing_context: self,
-          id: realm[:realm],
-          origin: realm[:origin],
-          type: realm[:type],
+          id: realm['realm'],
+          origin: realm['origin'],
+          type: realm['type'],
         )
       end
     end
@@ -48,6 +48,36 @@ module Charai
       bidi_call_async('browsingContext.close', {
         promptUnload: prompt_unload,
       }.compact).value!
+    end
+
+    def perform_keyboard_actions(&block)
+      q = ActionQueue.new
+      block.call(q)
+      perform_actions([{
+        type: 'key',
+        id: '__charai_keyboard',
+        actions: q.to_a,
+      }])
+    end
+
+    def perform_mouse_actions(&block)
+      q = ActionQueue.new
+      block.call(q)
+      perform_actions([{
+        type: 'pointer',
+        id: '__charai_mouse',
+        actions: q.to_a,
+      }])
+    end
+
+    def perform_mouse_wheel_actions(&block)
+      q = ActionQueue.new
+      block.call(q)
+      perform_actions([{
+        type: 'wheel',
+        id: '__charai_wheel',
+        actions: q.to_a,
+      }])
     end
 
     def reload(ignore_cache: nil, wait: nil)
@@ -85,6 +115,87 @@ module Charai
 
     def bidi_call_async(method_, params = {})
       @browser.bidi_call_async(method_, params.merge({ context: @context_id }))
+    end
+
+    def perform_actions(actions)
+      bidi_call_async('input.performActions', {
+        actions: actions,
+      }).value!
+    end
+
+    class Realm
+      def initialize(browsing_context:, id:, origin:, type: nil)
+        @browsing_context = browsing_context
+        @id = id
+        @origin = origin
+        @type = type
+      end
+
+      class ScriptEvaluationError < StandardError; end
+
+      def script_evaluate(expression)
+        result = @browsing_context.send(:bidi_call_async, 'script.evaluate', {
+          expression: expression,
+          target: { realm: @id },
+          awaitPromise: true,
+        }).value!
+
+        if result['type'] == 'exception'
+          raise ScriptEvaluationError, result['exceptionDetails']['text']
+        end
+
+        deserialize(result['result'])
+      end
+
+      attr_reader :type
+
+      private
+
+      # ref: https://github.com/puppeteer/puppeteer/blob/puppeteer-v23.5.3/packages/puppeteer-core/src/bidi/Deserializer.ts#L21
+      # Converted using ChatGPT 4o
+      def deserialize(result)
+        case result["type"]
+        when 'array'
+          result['value']&.map { |value| deserialize(value) }
+        when 'set'
+          result['value']&.each_with_object(Set.new) do |value, acc|
+            acc.add(deserialize(value))
+          end
+        when 'object'
+          result['value']&.each_with_object({}) do |tuple, acc|
+            key, value = tuple
+            acc[key] = deserialize(value)
+          end
+        when 'map'
+          result['value']&.each_with_object({}) do |tuple, acc|
+            key, value = tuple
+            acc[key] = deserialize(value)
+          end
+        when 'promise'
+          {}
+        when 'regexp'
+          flags = 0
+          result['value']['flags']&.each_char do |flag|
+            case flag
+            when 'm'
+              flags |= Regexp::MULTILINE
+            when 'i'
+              flags |= Regexp::IGNORECASE
+            end
+          end
+          Regexp.new(result['value']['pattern'], flags)
+        when 'date'
+          Date.parse(result['value'])
+        when 'undefined'
+          nil
+        when 'null'
+          nil
+        when 'number', 'bigint', 'boolean', 'string'
+          result['value']
+        else
+          raise ArgumentError, "Unknown type: #{result['type']}"
+        end
+      end
     end
   end
 end
