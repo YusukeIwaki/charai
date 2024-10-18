@@ -8,7 +8,7 @@ module Charai
 
     def click(x:, y:, delay: 50)
       @browsing_context.perform_mouse_actions do |q|
-        q.pointer_move(x: x, y: y)
+        q.pointer_move(x: x.to_i, y: y.to_i)
         q.pointer_down(button: 0)
         q.pause(duration: delay)
         q.pointer_up(button: 0)
