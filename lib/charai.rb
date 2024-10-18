@@ -4,6 +4,7 @@ require 'capybara'
 require 'concurrent'
 
 require 'charai/action_queue'
+require 'charai/agent'
 require 'charai/browser'
 require 'charai/browser_launcher'
 require 'charai/browser_process'

@@ -6,6 +6,25 @@ module Charai
       @browsing_context = browsing_context
     end
 
+    def on_send_message(&block)
+      @message_sender = block
+    end
+
+    def capture_screenshot
+      current_url = @browsing_context.url
+      @browsing_context.capture_screenshot(format: 'png').tap do |binary|
+        if @message_sender
+          message = Agent::Message.new(
+            text: "Capture of #{current_url}",
+            images: [
+              { png: Base64.strict_encode64(binary) },
+            ],
+          )
+          @message_sender.call(message)
+        end
+      end
+    end
+
     def click(x:, y:, delay: 50)
       @browsing_context.perform_mouse_actions do |q|
         q.pointer_move(x: x.to_i, y: y.to_i)
@@ -16,7 +35,12 @@ module Charai
     end
 
     def execute_script(script)
-      @browsing_context.default_realm.script_evaluate(script)
+      @browsing_context.default_realm.script_evaluate(script).tap do |result|
+        if @message_sender
+          message = Agent::Message.new(text: "result is `#{result}`", images: [])
+          @message_sender.call(message)
+        end
+      end
     end
 
     def on_pressing_key(key, &block)

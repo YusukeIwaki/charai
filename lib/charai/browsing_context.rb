@@ -41,7 +41,7 @@ module Charai
         clip: clip,
       }.compact).value!
 
-      Base64.strict_decode64(result[:data])
+      Base64.strict_decode64(result['data'])
     end
 
     def close(prompt_unload: nil)

@@ -1,3 +1,5 @@
+require 'open3'
+
 module Charai
   class BrowserProcess
     def initialize(*command)

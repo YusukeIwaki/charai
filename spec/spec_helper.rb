@@ -2,6 +2,7 @@
 
 require "charai"
 require "sinatra/base"
+require 'capybara/dsl'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -34,6 +35,7 @@ RSpec.configure do |config|
     Capybara.javascript_driver = :charai
     Capybara.app = nil
   end
+  config.include(Capybara::DSL, type: :web)
 
   driver_options = {
   }
