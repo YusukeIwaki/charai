@@ -114,6 +114,8 @@ module Charai
         "\uE008"
       when 'Control', 'ControlLeft', 'Ctrl'
         "\uE009"
+      when 'ControlOrMeta', 'CtrlOrMeta'
+        Charai::Util.macos? ? "\uE03D" : "\uE009"
       when 'Alt', 'AltLeft'
         "\uE00A"
       when 'Pause'

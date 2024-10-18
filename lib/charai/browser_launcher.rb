@@ -1,11 +1,11 @@
 module Charai
   class BrowserLauncher
     def initialize
-      if RUBY_PLATFORM =~ /darwin/
+      if ::Charai::Util.macos?
         if File.exist?("/Applications/Firefox Developer Edition.app/Contents/MacOS/firefox")
           @firefox_executable_path = "/Applications/Firefox Developer Edition.app/Contents/MacOS/firefox"
         end
-      elsif RUBY_PLATFORM =~ /linux/
+      elsif ::Charai::Util.linux?
         if File.exist?("/usr/bin/firefox-devedition")
           @firefox_executable_path = "/usr/bin/firefox-devedition"
         end
@@ -23,7 +23,7 @@ module Charai
         "--profile #{tmpdir}",
         "--no-remote",
       ]
-      if RUBY_PLATFORM =~ /darwin/
+      if ::Charai::Util.macos?
         args << "--foreground"
       end
       if headless
