@@ -10,6 +10,19 @@ module Charai
       @message_sender = block
     end
 
+    def assertion_ok(description)
+    end
+
+    def assertion_fail(description)
+      if defined?(RSpec::Expectations)
+        RSpec::Expectations.fail_with(description)
+      elsif defined?(MiniTest::Assertion)
+        raise MiniTest::Assertion, description
+      else
+        raise description
+      end
+    end
+
     def capture_screenshot
       current_url = @browsing_context.url
       @browsing_context.capture_screenshot(format: 'png').tap do |binary|

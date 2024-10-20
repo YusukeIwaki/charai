@@ -20,7 +20,7 @@ module Charai
     end
 
     def send_message_to_openai_chat(message)
-      if @pending
+      if @should_use_message_queue
         @message_queue << message
       else
         answer = @openai_chat.push(message.text, images: message.images)
@@ -30,28 +30,38 @@ module Charai
 
     private
 
-    def pending!
-      @pending = true
-      @message_queue = []
+    def with_aggregating_failures(&block)
+      if defined?(RSpec::Expectations)
+        label = nil
+        metadata = {}
+        RSpec::Expectations::FailureAggregator.new(label, metadata).aggregate(&block)
+      else
+        block.call
+      end
     end
 
-    def unpending!
-      @pending = false
+    def with_message_queuing(&block)
+      @should_use_message_queue = true
+      @message_queue = []
 
-      # Handle only the last message
-      if (message = @message_queue.last)
-        send_message_to_openai_chat(message)
+      begin
+        block.call
+      ensure
+        @should_use_message_queue = false
+        # Handle only the last message
+        if (message = @message_queue.last)
+          send_message_to_openai_chat(message)
+        end
       end
     end
 
     def handle_message_from_openai_chat(answer)
-      pending!
-      begin
-        answer.scan(/```[a-zA-Z]*\n(.*?)\n```/m).map(&:first).each do |code|
-          @sandbox.instance_eval(code)
+      with_message_queuing do
+        with_aggregating_failures do
+          answer.scan(/```[a-zA-Z]*\n(.*?)\n```/m).map(&:first).each do |code|
+            @sandbox.instance_eval(code)
+          end
         end
-      ensure
-        unpending!
       end
     end
 
