@@ -61,7 +61,54 @@ RSpec.describe Charai::Driver, use_openai_chat: true do
     Capybara.current_session.driver << "Hello"
   end
 
-  it 'should handle only the last message' do
+  it 'should handle multiple messages' do
+    @sinatra.get('/') do
+      <<~HTML
+      <h1>It works!</h1>
+      <input type="text" id="aa"/>
+      HTML
+    end
+
+    allow_any_instance_of(Charai::OpenaiChat).to receive(:push) do |_, text, **params|
+      case text
+      when 'Hello'
+        <<~MARKDOWN
+        Hi
+
+        ```
+        driver.execute_script "document.querySelector('#aa').value = '1'"
+        ```
+
+        and then
+
+        ```
+        driver.execute_script "document.querySelector('#aa').value += '1'"
+        ```
+
+        and then
+
+        ```
+        driver.execute_script "document.querySelector('#aa').value += '2'"
+        ```
+
+        and then
+
+        ```
+        driver.execute_script "document.querySelector('#aa').value"
+        ```
+        MARKDOWN
+      when "result is `112`"
+        'OK'
+      else
+        raise "Unexpected text: #{text}"
+      end
+    end
+
+    Capybara.current_session.visit '/'
+    Capybara.current_session.driver << "Hello"
+  end
+
+  it 'should reply only for the last message' do
     allow_any_instance_of(Charai::OpenaiChat).to receive(:push) do |_, text, **params|
       case text
       when 'Hello'

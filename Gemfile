@@ -4,6 +4,7 @@ source "https://rubygems.org"
 
 gemspec
 
+gem 'allure-rspec'
 gem "pry-byebug"
 gem "puma"
 gem "rake"

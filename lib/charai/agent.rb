@@ -58,8 +58,12 @@ module Charai
     def handle_message_from_openai_chat(answer)
       with_message_queuing do
         with_aggregating_failures do
-          answer.scan(/```[a-zA-Z]*\n(.*?)\n```/m).map(&:first).each do |code|
-            @sandbox.instance_eval(code)
+          begin
+            answer.scan(/```[a-zA-Z]*\n(.*?)\n```/m).map(&:first).each do |code|
+              @sandbox.instance_eval(code)
+            end
+          rescue Browser::Error => e
+            send_message_to_openai_chat(Message.new(text: "Error: #{e.message}"))
           end
         end
       end

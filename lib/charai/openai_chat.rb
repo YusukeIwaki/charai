@@ -5,7 +5,12 @@ require 'uri'
 
 module Charai
   class OpenaiChat
-    def initialize(introduction: nil, debug_message: false)
+    # callback
+    #  - on_chat_start
+    #  - on_chat_question(content: Array|String)
+    #  - on_chat_answer(answer_text)
+    #  - on_chat_conversation(content, answer_text)
+    def initialize(introduction: nil, callback: nil)
       @endpoint_url = ENV['OPENAI_ENDPOINT_URL'] || 'http://localhost:11434/v1/chat/completions'
       unless ENV['OPENAI_ENDPOINT_URL']
         # Specify 'model' option only for local execution on Ollama
@@ -13,12 +18,14 @@ module Charai
       end
       @api_key = ENV['OPENAI_API_KEY'] || 'hogehogehogehoge'
       @introduction = introduction
-      @debug_message = debug_message
+      @callback = callback
       @mutex = Mutex.new
       clear
     end
 
     def clear
+      trigger_callback(:on_chat_start)
+
       @messages = []
       if @introduction
         @messages << { role: 'system', content: @introduction }
@@ -28,15 +35,18 @@ module Charai
     # .push('How are you?')
     # .push('How many people is here?', images: [ { jpg: 'xXxXxxxxxxxxx' }, { png: 'xXxXxxxxxxxxx' } ])
     def push(question, images: [])
+      content = build_question(question, images)
       message = {
         role: 'user',
-        content: build_question(question, images),
+        content: content,
       }
 
       @mutex.synchronize do
-        debug_print_messages(message)
+        trigger_callback(:on_chat_question, content)
         fetch_openai(message).tap do |answer|
-          debug_print_answer(answer)
+          trigger_callback(:on_chat_answer, answer)
+          trigger_callback(:on_chat_conversation, content, answer)
+
           @messages << message
           @messages << { role: 'assistant', content: answer }
         end
@@ -118,7 +128,7 @@ module Charai
           uri,
           {
             model: @model,
-            messages: @messages + [message],
+            messages: with_message_history(message),
           }.compact.to_json,
           {
             'api-key' => @api_key,
@@ -135,28 +145,26 @@ module Charai
       end
     end
 
-    def debug_print_messages(new_message)
-      return unless @debug_message
-
-      puts 'SEND > '
-      @messages.each { |message| print_message(message) }
-      print_message(new_message)
-      puts "|---"
+    def with_message_history(new_message, omit_images_except_last: 3)
+      Enumerator.new do |out|
+        len = @messages.size
+        @messages.each_with_index do |message, i|
+          if i < len - omit_images_except_last && message[:content].is_a?(Array)
+            out << message.merge(content: message[:content].find { |c| c[:type] == 'text'}[:text])
+          else
+            out << message
+          end
+        end
+        out << new_message
+      end.to_a
     end
 
-    def print_message(message)
-      if message[:content].is_a?(String)
-        puts "|  #{message[:role]}: #{message[:content]}"
-      else
-        puts "|  #{message[:role]}: #{JSON.pretty_generate(message[:content])}"
+    def trigger_callback(method_name, ...)
+      if @callback.respond_to?(method_name)
+        @callback.public_send(method_name, ...)
+      elsif @callback.is_a?(Hash) && @callback[method_name].is_a?(Proc)
+        @callback[method_name].call(...)
       end
-    end
-
-    def debug_print_answer(answer)
-      return unless @debug_message
-
-      puts "RECV < #{answer}"
-      puts "|---"
     end
   end
 end

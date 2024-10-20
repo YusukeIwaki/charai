@@ -2,8 +2,13 @@ module Charai
   # Hub class for performing actions on the browser
   # Mainly used by AI.
   class InputTool
-    def initialize(browsing_context)
+    # callback
+    #  - on_assertion_ok(description)
+    #  - on_assertion_fail(description)
+    #  - on_action_start(action, params)
+    def initialize(browsing_context, callback: nil)
       @browsing_context = browsing_context
+      @callback = callback
     end
 
     def on_send_message(&block)
@@ -11,9 +16,12 @@ module Charai
     end
 
     def assertion_ok(description)
+      trigger_callback(:on_assertion_ok, description)
     end
 
     def assertion_fail(description)
+      trigger_callback(:on_assertion_fail, description)
+
       if defined?(RSpec::Expectations)
         RSpec::Expectations.fail_with(description)
       elsif defined?(MiniTest::Assertion)
@@ -24,6 +32,8 @@ module Charai
     end
 
     def capture_screenshot
+      trigger_callback(:on_action_start, 'capture_screenshot', {})
+
       current_url = @browsing_context.url
       @browsing_context.capture_screenshot(format: 'png').tap do |binary|
         if @message_sender
@@ -39,6 +49,8 @@ module Charai
     end
 
     def click(x:, y:, delay: 50)
+      trigger_callback(:on_action_start, 'click', { x: x, y: y, delay: delay })
+
       @browsing_context.perform_mouse_actions do |q|
         q.pointer_move(x: x.to_i, y: y.to_i)
         q.pointer_down(button: 0)
@@ -48,34 +60,41 @@ module Charai
     end
 
     def execute_script(script)
+      trigger_callback(:on_action_start, 'execute_script', { script: script })
+
       begin
         result = @browsing_context.default_realm.script_evaluate(script)
       rescue BrowsingContext::Realm::ScriptEvaluationError => e
         result = e.message
       end
 
-      if @message_sender
-        message = Agent::Message.new(text: "result is `#{result}`", images: [])
-        @message_sender.call(message)
-      end
+      notify_to_sender(result) unless "#{result}" == ''
 
       result
     end
 
     def on_pressing_key(key, &block)
+      trigger_callback(:on_action_start, 'key_down', { key: key })
+
       value = convert_key(key)
       @browsing_context.perform_keyboard_actions do |q|
         q.key_down(value: value)
       end
 
-      block.call
+      begin
+        block.call
+      ensure
+        trigger_callback(:on_action_start, 'key_up', { key: key })
 
-      @browsing_context.perform_keyboard_actions do |q|
-        q.key_up(value: value)
+        @browsing_context.perform_keyboard_actions do |q|
+          q.key_up(value: value)
+        end
       end
     end
 
     def press_key(key, delay: 50)
+      trigger_callback(:on_action_start, 'press_key', { key: key, delay: delay })
+
       value = convert_key(key)
       @browsing_context.perform_keyboard_actions do |q|
         q.key_down(value: value)
@@ -85,10 +104,14 @@ module Charai
     end
 
     def sleep_seconds(seconds)
+      trigger_callback(:on_action_start, 'sleep_seconds', { seconds: seconds })
+
       sleep seconds
     end
 
     def type_text(text, delay: 50)
+      trigger_callback(:on_action_start, 'type_text', { text: text, delay: delay })
+
       text.each_char do |c|
         @browsing_context.perform_keyboard_actions do |q|
           q.key_down(value: c)
@@ -105,6 +128,7 @@ module Charai
     # 2000 - strong
     def scroll_down(x: 0, y: 0, velocity: 1000)
       raise ArgumentError, 'velocity must be positive' if velocity <= 0
+      trigger_callback(:on_action_start, 'scroll_down', { x: x, y: y, velocity: velocity })
 
       @browsing_context.perform_mouse_wheel_actions do |q|
         deceleration = SplineDeceleration.new(velocity)
@@ -122,6 +146,7 @@ module Charai
     # 2000 - strong
     def scroll_up(x: 0, y: 0, velocity: 1000)
       raise ArgumentError, 'velocity must be positive' if velocity <= 0
+      trigger_callback(:on_action_start, 'scroll_up', { x: x, y: y, velocity: velocity })
 
       @browsing_context.perform_mouse_wheel_actions do |q|
         deceleration = SplineDeceleration.new(velocity)
@@ -134,6 +159,21 @@ module Charai
     end
 
     private
+
+    def notify_to_sender(message)
+      if @message_sender
+        message = Agent::Message.new(text: "result is `#{message}`", images: [])
+        @message_sender.call(message)
+      end
+    end
+
+    def trigger_callback(method_name, ...)
+      if @callback.respond_to?(method_name)
+        @callback.public_send(method_name, ...)
+      elsif @callback.is_a?(Hash) && @callback[method_name].is_a?(Proc)
+        @callback[method_name].call(...)
+      end
+    end
 
     # ref: https://github.com/puppeteer/puppeteer/blob/puppeteer-v23.5.3/packages/puppeteer-core/src/bidi/Input.ts#L52
     # Converted using ChatGPT 4o

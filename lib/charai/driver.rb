@@ -9,9 +9,11 @@ module Charai
 
     def initialize(_app, **options)
       @headless = options[:headless]
+      @callback = options[:callback]
       @debug_protocol = %w[1 true].include?(ENV['DEBUG'])
-      @debug_openai_chat_message = @debug_protocol || %w[openai].include?(ENV['DEBUG'])
     end
+
+    attr_writer :callback
 
     def wait?; false; end
     def needs_server?; true; end
@@ -53,12 +55,15 @@ module Charai
     end
 
     def openai_chat
-      @openai_chat ||= OpenaiChat.new(introduction: INTRODUCTION, debug_message: @debug_openai_chat_message)
+      @openai_chat ||= OpenaiChat.new(
+        introduction: INTRODUCTION,
+        callback: @callback,
+      )
     end
 
     def agent
       @agent ||= Agent.new(
-        input_tool: InputTool.new(browsing_context),
+        input_tool: InputTool.new(browsing_context, callback: @callback),
         openai_chat: openai_chat,
       )
     end
@@ -72,8 +77,8 @@ module Charai
     * キーボードで "hogeHoge!!" と入力したい場合には `driver.type_text("hogeHoge!!")`
     * Enterキーを押したい場合には `driver.press_key("Enter")`
     * コピー＆ペーストをしたい場合には `driver.on_pressing_key("CtrlOrMeta") { driver.press_key("c") ; driver.press_key("v") }`
-    * 画面の左上から (10ピクセル, 20ピクセル)の位置にマウスを置いてスクロール操作で下に向かってスクロールをしたい場合には `driver.scroll_down(x: 10, y: 20, velocity: 1000)`
-    * 同様に、上に向かってスクロールをしたい場合には `driver.scroll_up(x: 10, y: 20, velocity: 1000)`
+    * 画面の左上から (10ピクセル, 20ピクセル)の位置にマウスを置いてスクロール操作で下に向かってスクロールをしたい場合には `driver.scroll_down(x: 10, y: 20, velocity: 1500)`
+    * 同様に、上に向かってスクロールをしたい場合には `driver.scroll_up(x: 10, y: 20, velocity: 1500)`
     * 画面が切り替わるまで2秒待ちたい場合には `driver.sleep_seconds(2)`
     * 現在の画面を一旦確認したい場合には `driver.capture_screenshot`
     * DOM要素の位置を確認するために、JavaScriptの実行結果を取得したい場合は `driver.execute_script('JSON.stringify(document.querySelector("#some").getBoundingClientRect())')`
@@ -119,7 +124,9 @@ module Charai
 
     必ず、画像を見てクリックする場所がどこかを判断して `driver.click` を実行するようにしてください。場所がわからない場合には `driver.execute_script` を活用して、要素の場所を確認してください。 `driver.execute_script` を呼ぶと、私がJavaScriptの実行結果をアップロードします。現在のDOMの内容を確認したいときにも `driver.execute_script` は使用できます。例えば `driver.execute_script('document.body.innerHTML')` を実行すると現在のDOMのBodyのHTMLを取得することができます。
 
-    何も変化がない場合には、正しい場所をクリックできていない可能性が高いです。その場合には上記のgetBoundingClientRectを使用する手順で、クリックする位置を必ず確かめてください。
+    何も変化がない場合には、正しい場所をクリックできていない可能性が高いです。その場合には上記のgetBoundingClientRectを使用する手順で、クリックまたはスクロールする位置を必ず確かめてください。
+
+    `driver.execute_script` を複数実行した場合には、私は最後の結果だけをアップロードしますので、getBoundingClientRectを複数回使用する場合には、１回ずつ分けて指示してください。
 
     それでは始めます。テストしたい手順は以下の内容です。
     MARKDOWN

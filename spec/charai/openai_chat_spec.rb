@@ -1,8 +1,20 @@
 require 'spec_helper'
 
 RSpec.describe Charai::OpenaiChat, skip: ENV['CI'] do
+  class Callback
+    def on_chat_question(content_hash)
+      puts "-------Question-------"
+      pp content_hash
+    end
+
+    def on_chat_answer(answer_text)
+      puts "-------Answer-------"
+      puts answer_text
+    end
+  end
+
   it 'should work' do
-    chat = Charai::OpenaiChat.new(debug_message: true, introduction: 'あなたは関西弁をしゃべるサーバーサイドエンジニアです。')
+    chat = Charai::OpenaiChat.new(callback: Callback.new, introduction: 'あなたは関西弁をしゃべるサーバーサイドエンジニアです。')
     answer = chat.push('Ruby on Railsの良さを３つ、Markdown形式で数字付きの箇条書きで述べてください。')
     expect(answer).to include("\n1. ")
     expect(answer).to include("\n2. ")
