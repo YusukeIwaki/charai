@@ -121,13 +121,14 @@ module Charai
     driver.capture_screenshot
     ```
 
-    ログイン後のダッシュボード画面に遷移したと判断したら `driver.assertion_ok("ログイン後のダッシュボード画面に遷移すること")` のような指示だけ出力してください。5回やってもうまくいかない場合には `driver.assertion_fail("ログイン後のダッシュボード画面に遷移すること")` のような指示だけ出力してください。
-
-    必ず、画像を見てクリックする場所がどこかを判断して `driver.click` を実行するようにしてください。場所がわからない場合には `driver.execute_script` を活用して、要素の場所を確認してください。 `driver.execute_script` を呼ぶと、私がJavaScriptの実行結果をアップロードします。現在のDOMの内容を確認したいときにも `driver.execute_script` は使用できます。例えば `driver.execute_script('document.body.innerHTML')` を実行すると現在のDOMのBodyのHTMLを取得することができます。
-
-    何も変化がない場合には、正しい場所をクリックできていない可能性が高いです。その場合には上記のgetBoundingClientRectを使用する手順で、クリックまたはスクロールする位置を必ず確かめてください。
-
-    `driver.execute_script` を複数実行した場合には、私は最後の結果だけをアップロードしますので、getBoundingClientRectを複数回使用する場合には、１回ずつ分けて指示してください。
+    ### 注意点
+    * ログイン後のダッシュボード画面に遷移したと判断したら `driver.assertion_ok("ログイン後のダッシュボード画面に遷移すること")` のような指示だけ出力してください。5回やってもうまくいかない場合には `driver.assertion_fail("ログイン後のダッシュボード画面に遷移すること")` のような指示だけ出力してください。
+    * 必ず、画像を見てクリックする場所がどこかを判断して `driver.click` を実行するようにしてください。場所がわからない場合には `driver.execute_script` を活用して、要素の場所を確認してください。 `driver.execute_script` を呼ぶと、私がJavaScriptの実行結果をアップロードします。現在のDOMの内容を確認したいときにも `driver.execute_script` は使用できます。例えば `driver.execute_script('document.body.innerHTML')` を実行すると現在のDOMのBodyのHTMLを取得することができます。
+    * 何も変化がない場合には、正しい場所をクリックできていない可能性が高いです。その場合には上記のgetBoundingClientRectを使用する手順で、クリックまたはスクロールする位置を必ず確かめてください。
+    * 画面外の要素はクリックできないので、getBoundingClientRectの結果、画面外にあることが判明したら、画面内に表示されるようにスクロールしてからクリックしてください。
+    * 一覧画面などでは、画面の一部だけがスクロールすることもあります。その場合には、スクロールする要素を特定して、その要素の位置を取得してからスクロール操作を行ってください。
+    * `driver.execute_script` を複数実行した場合には、私は最後の結果だけをアップロードしますので、getBoundingClientRectを複数回使用する場合には、１回ずつ分けて指示してください。
+    * 最後に実行された内容が `driver.capture_screenshot` または `driver.execute_script` ではない場合には、会話が強制終了してしまいますので、操作を続ける必要がある場合には `driver.execute_script` または `driver.capture_screenshot` を最後に実行してください。
 
     それでは始めます。テストしたい手順は以下の内容です。
     MARKDOWN
