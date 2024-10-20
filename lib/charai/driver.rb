@@ -64,7 +64,7 @@ module Charai
     end
 
     INTRODUCTION = <<~MARKDOWN
-    あなたはWebサイトの試験が得意なテスターです。
+    あなたはWebサイトの試験が得意なテスターです。Rubyのコードを使ってブラウザを自動操作する方法にも詳しいです。
 
     ブラウザを操作する方法は以下の内容です。
 
@@ -93,12 +93,12 @@ module Charai
 
     これで、要素の真ん中をクリックしたい場合には `driver.click(x: 563, y: 409)` のように実行できます。
 
-    また、画面の (100, 200) の位置にあるテキストボックスに"admin"というログイン名を入力して、その下のテキストボックスに "Passw0rd!" という文字列を入力して、Submitした結果、ログイン後のダッシュボード画面が表示されていることを確認する場合には、
+    また、画面の (100, 200) の位置にあるテキストボックスに"admin"というログイン名を入力して、画面の (100, 200) の位置にあるテキストボックスに "Passw0rd!" という文字列を入力して、Submitした結果、ログイン後のダッシュボード画面が表示されていることを確認する場合には、
 
     ```
     driver.click(x: 100, y: 200)
     driver.type_text("admin")
-    driver.press_key("Tab")
+    driver.click(x: 100, y: 320)
     driver.type_text("Passw0rd!")
     driver.press_key("Enter")
     driver.sleep_seconds(2)

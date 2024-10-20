@@ -47,7 +47,7 @@ module Charai
     def handle_message_from_openai_chat(answer)
       pending!
       begin
-        answer.scan(/```[a-zA-Z]*\n(.*)\n```/m).map(&:first).each do |code|
+        answer.scan(/```[a-zA-Z]*\n(.*?)\n```/m).map(&:first).each do |code|
           @sandbox.instance_eval(code)
         end
       ensure
