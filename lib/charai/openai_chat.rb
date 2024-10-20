@@ -87,21 +87,16 @@ module Charai
     end
 
     def fetch_image_url(url)
-      # URLをパース
       uri = URI.parse(url)
 
-      # HTTPリクエストを作成して画像データを取得
       response = Net::HTTP.get_response(uri)
 
-      # レスポンスボディが画像データ、content-typeヘッダがMIMEタイプ
       if response.is_a?(Net::HTTPSuccess)
         image_data = response.body
         mime_type = response['content-type']
 
-        # Base64エンコード
         base64_image = Base64.strict_encode64(image_data)
 
-        # MIMEタイプに応じたハッシュを生成
         case mime_type
         when 'image/png'
           { png: base64_image }
@@ -118,7 +113,7 @@ module Charai
     def fetch_openai(message)
       uri = URI(@endpoint_url)
 
-      resp = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == 'https', read_timeout: 120) do |http|
+      response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == 'https', read_timeout: 120) do |http|
         http.post(
           uri,
           {
@@ -132,8 +127,12 @@ module Charai
           },
         )
       end
-      body = JSON.parse(resp.body)
-      body.dig('choices', 0, 'message', 'content')
+      if response.is_a?(Net::HTTPSuccess)
+        body = JSON.parse(response.body)
+        body.dig('choices', 0, 'message', 'content')
+      else
+        raise "Failed to fetch OpenAI: #{response.code} #{response.message}"
+      end
     end
 
     def debug_print_messages(new_message)

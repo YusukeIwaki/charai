@@ -35,12 +35,18 @@ module Charai
     end
 
     def execute_script(script)
-      @browsing_context.default_realm.script_evaluate(script).tap do |result|
-        if @message_sender
-          message = Agent::Message.new(text: "result is `#{result}`", images: [])
-          @message_sender.call(message)
-        end
+      begin
+        result = @browsing_context.default_realm.script_evaluate(script)
+      rescue BrowsingContext::Realm::ScriptEvaluationError => e
+        result = e.message
       end
+
+      if @message_sender
+        message = Agent::Message.new(text: "result is `#{result}`", images: [])
+        @message_sender.call(message)
+      end
+
+      result
     end
 
     def on_pressing_key(key, &block)

@@ -10,7 +10,7 @@ module Charai
     def initialize(_app, **options)
       @headless = options[:headless]
       @debug_protocol = %w[1 true].include?(ENV['DEBUG'])
-      @debug_openai_chat_message = @debug_protocol
+      @debug_openai_chat_message = @debug_protocol || %w[openai].include?(ENV['DEBUG'])
     end
 
     def wait?; false; end
@@ -119,7 +119,7 @@ module Charai
 
     必ず、画像を見てクリックする場所がどこかを判断して `driver.click` を実行するようにしてください。場所がわからない場合には `driver.execute_script` を活用して、要素の場所を確認してください。 `driver.execute_script` を呼ぶと、私がJavaScriptの実行結果をアップロードします。現在のDOMの内容を確認したいときにも `driver.execute_script` は使用できます。例えば `driver.execute_script('document.body.innerHTML')` を実行すると現在のDOMのBodyのHTMLを取得することができます。
 
-    何も変化がない場合には、正しい場所をクリックできていない可能性が高いです。その場合には上記の手順でクリックする位置を必ず確かめてください。
+    何も変化がない場合には、正しい場所をクリックできていない可能性が高いです。その場合には上記のgetBoundingClientRectを使用する手順で、クリックする位置を必ず確かめてください。
 
     それでは始めます。テストしたい手順は以下の内容です。
     MARKDOWN
