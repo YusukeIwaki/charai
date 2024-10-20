@@ -10,10 +10,11 @@ module Charai
     def initialize(_app, **options)
       @headless = options[:headless]
       @callback = options[:callback]
+      @introduction = options[:introduction]
       @debug_protocol = %w[1 true].include?(ENV['DEBUG'])
     end
 
-    attr_writer :callback
+    attr_writer :callback, :introduction
 
     def wait?; false; end
     def needs_server?; true; end
@@ -56,7 +57,7 @@ module Charai
 
     def openai_chat
       @openai_chat ||= OpenaiChat.new(
-        introduction: INTRODUCTION,
+        introduction: @introduction || INTRODUCTION,
         callback: @callback,
       )
     end
