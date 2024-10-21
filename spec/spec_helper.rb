@@ -10,8 +10,13 @@ class HtmlReport
     @content = []
   end
 
-  def start
-    @content << "<html><body>"
+  def start(introduction)
+    @content << <<~HTML
+    <html>
+    <head><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css"></head>
+    <body>
+    <pre style="margin: 100px 75px; border-left: 0px;">#{introduction}</pre>
+    HTML
   end
 
   def add_conversation(content, answer)
@@ -19,32 +24,33 @@ class HtmlReport
       text = content.find { |c| c[:type] == 'text' }[:text]
 
       @content << <<~HTML
-      <details>
-        <summary>#{text}</summary>
+      <div style="margin: 40px 25px" class="card fluid">
+      <h4 style="border-left: .25rem solid var(--pre-color);">user</h4>
+      <pre>#{text}</pre>
       HTML
 
-      has_image = false
       content.each do |c|
         next unless c[:type] == 'image_url'
 
         @content << <<~HTML
-        <img src="#{c[:image_url][:url]}" />
+        <img src="#{c[:image_url][:url]}" width="480" />
         HTML
-        has_image = true
       end
 
-      @content << '<hr />' if has_image
-
       @content << <<~HTML
-        <pre>#{answer}</pre>
-      </details>
+      <h4 style="text-align: end; border-right: .25rem solid var(--pre-color);">assistant</h4>
+      <pre style="border-left: 0px; border-right: .25rem solid var(--pre-color);">#{answer}</pre>
+      </div>
       HTML
     else
       @content << <<~HTML
-      <details open>
-        <summary>#{content}</summary>
-        <pre>#{answer}</pre>
-      </details>
+      <div style="margin: 40px 25px" class="card fluid">
+      <h4 style="border-left: .25rem solid var(--pre-color);">user</h4>
+      <pre>#{content}</pre>
+
+      <h4 style="text-align: end; border-right: .25rem solid var(--pre-color);">assistant</h4>
+      <pre style="border-left: 0px; border-right: .25rem solid var(--pre-color);">#{answer}</pre>
+      </div>
       HTML
     end
   end
@@ -94,8 +100,8 @@ RSpec.configure do |config|
 
     report = HtmlReport.new
     Capybara.current_session.driver.callback = {
-      on_chat_start: -> {
-        report.start
+      on_chat_start: -> (introduction) {
+        report.start(introduction)
       },
       on_chat_conversation: ->(content_hash, answer) {
         puts answer

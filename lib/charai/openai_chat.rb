@@ -6,7 +6,7 @@ require 'uri'
 module Charai
   class OpenaiChat
     # callback
-    #  - on_chat_start
+    #  - on_chat_start(introduction)
     #  - on_chat_question(content: Array|String)
     #  - on_chat_answer(answer_text)
     #  - on_chat_conversation(content, answer_text)
@@ -24,7 +24,7 @@ module Charai
     end
 
     def clear
-      trigger_callback(:on_chat_start)
+      trigger_callback(:on_chat_start, @introduction)
 
       @messages = []
       if @introduction
