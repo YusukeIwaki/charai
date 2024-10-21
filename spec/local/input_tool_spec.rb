@@ -36,6 +36,10 @@ RSpec.describe Charai::InputTool do
 
       expect(e("document.getElementById('result').getBoundingClientRect()")).to be_nil
     end
+
+    it 'should work with backquote' do
+      expect(e('var a=3; `a=${a}`')).to eq('a=3')
+    end
   end
 
   describe 'keyboard' do

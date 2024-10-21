@@ -55,13 +55,20 @@ module Charai
       end
     end
 
+    class HandleMessageError < StandardError ; end
+
     def handle_message_from_openai_chat(answer)
       with_message_queuing do
         with_aggregating_failures do
           begin
             answer.scan(/```[a-zA-Z]*\n(.*?)\n```/m).map(&:first).each do |code|
+              if code.include?('`') # Avoid OS shell execution.
+                raise HandleMessageError, "It is not allowed to use backquote"
+              end
               @sandbox.instance_eval(code)
             end
+          rescue HandleMessageError => e
+            send_message_to_openai_chat(Message.new(text: e.message))
           rescue Browser::Error => e
             send_message_to_openai_chat(Message.new(text: "Error: #{e.message}"))
           end
