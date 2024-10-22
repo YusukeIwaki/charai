@@ -20,8 +20,11 @@ module Charai
     def needs_server?; true; end
 
     def <<(text)
-      message = Agent::Message.new(text: text)
-      agent.send_message_to_openai_chat(message)
+      agent << text
+    end
+
+    def last_message
+      agent.last_message
     end
 
     def reset!

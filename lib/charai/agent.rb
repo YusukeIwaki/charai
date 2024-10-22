@@ -19,16 +19,24 @@ module Charai
       @openai_chat = openai_chat
     end
 
+    def <<(text)
+      message = Message.new(text: text)
+      send_message_to_openai_chat(message)
+    end
+
+    attr_reader :last_message
+
+    private
+
     def send_message_to_openai_chat(message)
       if @should_use_message_queue
         @message_queue << message
       else
         answer = @openai_chat.push(message.text, images: message.images)
+        @last_message = answer
         handle_message_from_openai_chat(answer)
       end
     end
-
-    private
 
     def with_aggregating_failures(&block)
       if defined?(RSpec::Expectations)

@@ -37,6 +37,7 @@ RSpec.describe Charai::Driver, use_openai_chat: true do
 
     Capybara.current_session.visit '/'
     Capybara.current_session.driver << "Hello"
+    expect(Capybara.current_session.driver.last_message).to eq('OK')
   end
 
   it 'should handle illegal use of backquote' do
@@ -76,7 +77,7 @@ RSpec.describe Charai::Driver, use_openai_chat: true do
         ```
         MARKDOWN
       when /TypeError/
-        'OK'
+        'ERROR'
       else
         raise "Unexpected text: #{text}"
       end
@@ -84,6 +85,7 @@ RSpec.describe Charai::Driver, use_openai_chat: true do
 
     Capybara.current_session.visit '/'
     Capybara.current_session.driver << "Hello"
+    expect(Capybara.current_session.driver.last_message).to eq('ERROR')
   end
 
   it 'should handle multiple messages' do
@@ -131,6 +133,7 @@ RSpec.describe Charai::Driver, use_openai_chat: true do
 
     Capybara.current_session.visit '/'
     Capybara.current_session.driver << "Hello"
+    expect(Capybara.current_session.driver.last_message).to eq('OK')
   end
 
   it 'should reply only for the last message' do
