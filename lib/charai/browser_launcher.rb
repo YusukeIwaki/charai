@@ -20,7 +20,8 @@ module Charai
 
       args = [
         "--remote-debugging-port=0",
-        "--profile #{tmpdir}",
+        "--profile",
+        tmpdir,
         "--no-remote",
       ]
       if ::Charai::Util.macos?
