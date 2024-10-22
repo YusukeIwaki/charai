@@ -79,6 +79,8 @@ module Charai
             send_message_to_openai_chat(Message.new(text: e.message))
           rescue Browser::Error => e
             send_message_to_openai_chat(Message.new(text: "Error: #{e.message}"))
+          rescue => e
+            send_message_to_openai_chat(Message.new(text: "ERROR: #{e.message}"))
           end
         end
       end

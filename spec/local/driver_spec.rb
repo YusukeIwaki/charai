@@ -65,6 +65,29 @@ RSpec.describe Charai::Driver, use_openai_chat: true do
     Capybara.current_session.driver << "Hello"
   end
 
+  it 'should handle NoMethodError' do
+    allow_any_instance_of(Charai::OpenaiChat).to receive(:push) do |_, text, **params|
+      case text
+      when 'Hello'
+        <<~MARKDOWN
+        Hi
+
+        ```
+        driver.click(x: どこか, y: どこか)
+        ```
+        MARKDOWN
+      when /undefined local variable or method/
+        'ERROR'
+      else
+        raise "Unexpected text: #{text}"
+      end
+    end
+
+    Capybara.current_session.visit '/'
+    Capybara.current_session.driver << "Hello"
+    expect(Capybara.current_session.driver.last_message).to eq('ERROR')
+  end
+
   it 'should handle script evaluation error' do
     allow_any_instance_of(Charai::OpenaiChat).to receive(:push) do |_, text, **params|
       case text
