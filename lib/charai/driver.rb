@@ -14,7 +14,7 @@ module Charai
       @debug_protocol = %w[1 true].include?(ENV['DEBUG'])
     end
 
-    attr_writer :callback, :introduction, :more_introduction
+    attr_writer :callback, :introduction, :additional_instruction
 
     def wait?; false; end
     def needs_server?; true; end
@@ -31,7 +31,7 @@ module Charai
       @browsing_context&.close
       @browsing_context = nil
       @openai_chat&.clear
-      @more_introduction = nil
+      @additional_instruction = nil
     end
 
     def visit(path)
@@ -135,7 +135,7 @@ module Charai
       * `driver.execute_script` を複数実行した場合には、私は最後の結果だけをアップロードしますので、getBoundingClientRectを複数回使用する場合には、１回ずつ分けて指示してください。
       * 最後に実行された内容が `driver.capture_screenshot` または `driver.execute_script` ではない場合には、会話が強制終了してしまいますので、操作を続ける必要がある場合には `driver.execute_script` または `driver.capture_screenshot` を最後に実行してください。
 
-      #{@more_introduction ? "### 補足説明\n#{@more_introduction}" : ""}
+      #{@additional_instruction ? "### 補足説明\n#{@additional_instruction}" : ""}
 
       それでは始めます。テストしたい手順は以下の内容です。
       MARKDOWN
