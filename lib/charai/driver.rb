@@ -2,11 +2,6 @@
 
 module Charai
   class Driver < ::Capybara::Driver::Base
-    class << self
-      # global browser instance
-      attr_accessor :__browser
-    end
-
     def initialize(_app, **options)
       @headless = options[:headless]
       @callback = options[:callback]
@@ -30,6 +25,8 @@ module Charai
     def reset!
       @browsing_context&.close
       @browsing_context = nil
+      @browser&.close
+      @browser = nil
       @openai_chat&.clear
       @additional_instruction = nil
     end
@@ -50,7 +47,7 @@ module Charai
     private
 
     def browser
-      Driver.__browser ||= Browser.launch(headless: @headless, debug_protocol: @debug_protocol)
+      @browser ||= Browser.launch(headless: @headless, debug_protocol: @debug_protocol)
     end
 
     def browsing_context

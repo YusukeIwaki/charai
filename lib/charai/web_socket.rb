@@ -66,15 +66,15 @@ module Charai
 
       Thread.new do
         wait_for_data until @ready_state >= STATE_CLOSING
-      rescue IOError
-        # connection closed. Just ignore it.
-        raise if @ready_state < STATE_CLOSING
       rescue EOFError
         # Browser was gone.
         # We have nothing todo. Just finish polling.
         if @ready_state < STATE_CLOSING
           handle_on_close(reason: 'Going Away', code: 1001)
         end
+      rescue IOError
+        # connection closed. Just ignore it.
+        raise if @ready_state < STATE_CLOSING
       end
     end
 

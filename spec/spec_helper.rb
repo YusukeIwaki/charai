@@ -91,6 +91,8 @@ RSpec.configure do |config|
     Capybara.current_driver = :charai_headless
     Capybara.javascript_driver = :charai
     Capybara.app = @sinatra
+
+    Capybara.reset_sessions!
   end
 
   config.around(:each, type: :web) do |example|
