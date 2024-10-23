@@ -28,6 +28,7 @@ module Charai
       @browser&.close
       @browser = nil
       @openai_chat&.clear
+      @agent = nil
       @additional_instruction = nil
     end
 
