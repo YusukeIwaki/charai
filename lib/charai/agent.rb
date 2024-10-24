@@ -1,12 +1,8 @@
 module Charai
   class Agent
-    class Message < Struct.new(:text, :images, keyword_init: true)
-      def text
-        self[:text] or raise "text is required"
-      end
-
-      def images
-        self[:images] || []
+    class Message < Data.define(:text, :images)
+      def initialize(text:, images: [])
+        super(text: text, images: images)
       end
     end
 
