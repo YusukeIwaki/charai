@@ -40,7 +40,7 @@ RSpec.describe Charai::Driver, use_openai_chat: true do
     expect(Capybara.current_session.driver.last_message).to eq('OK')
   end
 
-  it 'should handle illegal use of backquote' do
+  it 'should handle indented code block' do
     allow_any_instance_of(Charai::OpenaiChat).to receive(:push) do |_, text, **params|
       case text
       when 'Hello'
@@ -48,11 +48,38 @@ RSpec.describe Charai::Driver, use_openai_chat: true do
         Hi
 
         ```
-        driver.execute_script(`
-        var a=3;
-        a + 2
-        `)
+        driver.execute_script("1 + 1")
         ```
+
+          ```
+          driver.execute_script("2 + 3")
+          ```
+        MARKDOWN
+      when /result is `5`/
+        'OK'
+      else
+        raise "Unexpected text: #{text}"
+      end
+    end
+
+    Capybara.current_session.visit '/'
+    Capybara.current_session.driver << "Hello"
+
+  end
+
+  it 'should handle illegal use of backquote' do
+    allow_any_instance_of(Charai::OpenaiChat).to receive(:push) do |_, text, **params|
+      case text
+      when 'Hello'
+        <<~MARKDOWN
+        Hi
+
+          ```
+          driver.execute_script(`
+          var a=3;
+          a + 2
+          `)
+          ```
         MARKDOWN
       when /not allowed to use backquote/
         'OK'

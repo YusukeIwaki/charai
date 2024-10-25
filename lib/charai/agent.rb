@@ -65,7 +65,7 @@ module Charai
       with_message_queuing do
         with_aggregating_failures do
           begin
-            answer.scan(/```[a-zA-Z]*\n(.*?)\n```/m).map(&:first).each do |code|
+            answer.scan(/```[a-zA-Z]*\n(.*?)\n\s*```/m).map(&:first).each do |code|
               if code.include?('`') # Avoid OS shell execution.
                 raise HandleMessageError, "It is not allowed to use backquote"
               end
