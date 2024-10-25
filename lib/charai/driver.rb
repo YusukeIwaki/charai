@@ -3,6 +3,10 @@
 module Charai
   class Driver < ::Capybara::Driver::Base
     def initialize(_app, **options)
+      @openai_configuration = options[:openai_configuration]
+      unless @openai_configuration
+        raise ArgumentError, "driver_options[:openai_configuration] is required"
+      end
       @headless = options[:headless]
       @callback = options[:callback]
       @introduction = options[:introduction]
@@ -59,6 +63,7 @@ module Charai
 
     def openai_chat
       @openai_chat ||= OpenaiChat.new(
+        @openai_configuration,
         introduction: @introduction || default_introduction,
         callback: @callback,
       )

@@ -10,13 +10,8 @@ module Charai
     #  - on_chat_question(content: Array|String)
     #  - on_chat_answer(answer_text)
     #  - on_chat_conversation(content, answer_text)
-    def initialize(introduction: nil, callback: nil)
-      @endpoint_url = ENV['OPENAI_ENDPOINT_URL'] || 'http://localhost:11434/v1/chat/completions'
-      unless ENV['OPENAI_ENDPOINT_URL']
-        # Specify 'model' option only for local execution on Ollama
-        @model = 'llava:34b' #'llama-3-elyza-jp-8b:latest'
-      end
-      @api_key = ENV['OPENAI_API_KEY'] || 'hogehogehogehoge'
+    def initialize(configuration, introduction: nil, callback: nil)
+      @configuration = configuration
       @introduction = introduction
       @callback = callback
       @mutex = Mutex.new
@@ -121,20 +116,18 @@ module Charai
     end
 
     def fetch_openai(message)
-      uri = URI(@endpoint_url)
+      uri = URI(@configuration.endpoint_url)
 
       response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == 'https', read_timeout: 120) do |http|
         http.post(
           uri,
-          {
-            model: @model,
+          @configuration.decorate_body({
             messages: with_message_history(message),
-          }.compact.to_json,
-          {
-            'api-key' => @api_key,
+          }).to_json,
+          @configuration.add_auth_header({
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-          },
+          }),
         )
       end
       if response.is_a?(Net::HTTPSuccess)
