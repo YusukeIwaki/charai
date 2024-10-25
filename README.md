@@ -1,3 +1,6 @@
+[![Gem Version](https://badge.fury.io/rb/charai.svg)](https://badge.fury.io/rb/charai)
+
+
 # Charai
 
 Chat + Ruby + AI = Charai
