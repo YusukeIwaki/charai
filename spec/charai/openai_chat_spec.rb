@@ -22,6 +22,10 @@ RSpec.describe Charai::OpenaiChat, skip: ENV['CI'] do
       endpoint_url: ENV['OPENAI_ENDPOINT_URL'],
       api_key: ENV['OPENAI_API_KEY'],
     )
+    # Charai::GeminiOpenaiConfiguration.new(
+    #   model: 'gemini-1.5-flash'
+    #   api_key: ENV['GEMINI_API_KEY'],
+    # )
   end
 
   it 'should work' do

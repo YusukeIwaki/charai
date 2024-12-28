@@ -19,6 +19,26 @@ module Charai
     end
   end
 
+  class GeminiOpenaiConfiguration
+    def initialize(model:, api_key:)
+      @endpoint_url = 'https://generativelanguage.googleapis.com/v1beta/openai/'
+      @model = model
+      @api_key = api_key
+    end
+
+    attr_reader :endpoint_url
+
+    def add_auth_header(headers)
+      headers['Authorization'] = "Bearer #{@api_key}"
+      headers
+    end
+
+    def decorate_body(payload)
+      payload[:model] = @model
+      payload
+    end
+  end
+
   class AzureOpenaiConfiguration
     def initialize(endpoint_url:, api_key:)
       @endpoint_url = endpoint_url
