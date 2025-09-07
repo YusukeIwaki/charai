@@ -123,8 +123,8 @@ RSpec.configure do |config|
   config.include(Capybara::DSL, type: :web)
 
   openai_configuration = Charai::AzureOpenaiConfiguration.new(
-    endpoint_url: ENV['OPENAI_ENDPOINT_URL'],
-    api_key: ENV['OPENAI_API_KEY'],
+    endpoint_url: ENV['AZURE_OPENAI_ENDPOINT_URL'],
+    api_key: ENV['AZURE_OPENAI_API_KEY'],
   )
 
   Capybara.register_driver :charai do |app|
