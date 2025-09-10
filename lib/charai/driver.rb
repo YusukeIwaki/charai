@@ -36,6 +36,16 @@ module Charai
       @additional_instruction = nil
     end
 
+    def save_screenshot(path = nil, **_options)
+      browsing_context.capture_screenshot.tap do |binary|
+        if path
+          File.open(path, 'wb') do |fp|
+            fp.write(binary)
+          end
+        end
+      end
+    end
+
     def visit(path)
       host = Capybara.app_host || Capybara.default_host
 

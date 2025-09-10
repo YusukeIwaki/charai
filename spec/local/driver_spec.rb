@@ -249,4 +249,17 @@ RSpec.describe Charai::Driver, use_openai_chat: true do
       expect(error.message).to include("test item 3")
     end
   end
+
+  it 'should save_screenshot without path' do
+    Capybara.current_session.visit '/'
+    expect(Capybara.current_session.driver.save_screenshot).to include('PNG')
+  end
+
+  it 'should save_screenshot with path' do
+    Capybara.current_session.visit '/'
+    Dir.mktmpdir do |dir|
+      Capybara.current_session.driver.save_screenshot(File.join(dir, 'screenshot.png'))
+      expect(File.read(File.join(dir, 'screenshot.png'))).to include('PNG')
+    end
+  end
 end
