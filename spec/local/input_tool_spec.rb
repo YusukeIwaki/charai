@@ -12,6 +12,80 @@ RSpec.describe Charai::InputTool do
     input_tool.execute_script(script)
   end
 
+  describe 'snapshot' do
+    before do
+      @sinatra.get('/') do
+        <<~HTML
+        <html>
+        <body>
+          <h1>Login form</h1>
+
+          <form action="/login" method="post">
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="user_email" autocomplete="email" required>
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input type="password" id="password" name="user_password" autocomplete="current-password" required>
+            </div>
+
+            <button type="submit" class="submit-button">LOGIN</button>
+          </form>
+
+        </body>
+        </html>
+        HTML
+      end
+
+      Capybara.current_session.visit '/'
+    end
+
+    it 'should capture aria_snapshot' do
+      expect(input_tool.aria_snapshot).to eq([
+        '- heading "Login form" [level=1]',
+        '- text: Email',
+        '- textbox "Email"',
+        '- text: Password',
+        '- textbox "Password"',
+        '- button "LOGIN"',
+      ])
+
+      expect(input_tool.aria_snapshot(root_locator: 'document.querySelector("form")')).to eq([
+        '- text: Email',
+        '- textbox "Email"',
+        '- text: Password',
+        '- textbox "Password"',
+        '- button "LOGIN"',
+      ])
+
+      expect { input_tool.aria_snapshot(root_locator: 'document.getElementById("hoge")') }.to raise_error(/Element not found/)
+    end
+
+    it 'should work with ref' do
+      expect(input_tool.aria_snapshot(ref: true)).to eq([
+        '- generic [active] [ref=e1]:',
+        '  - heading "Login form" [level=1] [ref=e2]',
+        '  - generic [ref=e3]:',
+        '    - generic [ref=e4]:',
+        '      - generic [ref=e5]: Email',
+        '      - textbox "Email" [ref=e6]',
+        '    - generic [ref=e7]:',
+        '      - generic [ref=e8]: Password',
+        '      - textbox "Password" [ref=e9]',
+        '    - button "LOGIN" [ref=e10]',
+      ])
+
+      expect(input_tool.execute_script_with_ref(:e7, "el => el.outerHTML").split("\n").map(&:strip)).to eq([
+        '<div class="form-group">',
+        '<label for="password">Password</label>',
+        '<input type="password" id="password" name="user_password" autocomplete="current-password" required="">',
+        '</div>',
+      ])
+    end
+  end
+
   describe 'evaluate' do
     before do
       @sinatra.get('/') do
@@ -33,8 +107,7 @@ RSpec.describe Charai::InputTool do
       expect(e('new RegExp("A*b", "mi")')).to eq(/A*b/mi)
       expect(e('new RegExp("A*b", "m")')).to eq(/A*b/m)
       expect(e('new RegExp("A*b", "g")')).to eq(/A*b/)
-
-      expect(e("document.getElementById('result').getBoundingClientRect()")).to be_nil
+      expect(e("document.getElementById('result').getBoundingClientRect()")).to eq({})
     end
 
     it 'should work with backquote' do

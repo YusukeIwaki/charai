@@ -31,6 +31,31 @@ module Charai
       end
     end
 
+    def aria_snapshot(root_locator: 'document.body', ref: false)
+      trigger_callback(:on_action_start, 'aria_snapshot', { root_locator: root_locator, ref: ref })
+
+      current_url = @browsing_context.url
+      snapshot = @browsing_context.default_realm._with_injected_script do |script|
+        if ref
+          body_handle = script.getprop("document.body", as_handle: true)
+          result = script.call(:ariaSnapshot, body_handle, { mode: 'ai' })
+          result.split("\n")
+        else
+          not_found = script.e("!#{root_locator}")
+          if not_found
+            raise ArgumentError, "Element not found: #{root_locator}"
+          end
+          result = script.call(:ariaSnapshot, script.h(root_locator), { mode: 'autoexpect' })
+          result.split("\n")
+        end
+      end
+
+      if @message_sender
+        message = Agent::Message.new(text: "ARIA snapshot of #{current_url}\n\n#{snapshot}")
+        @message_sender.call(message)
+      end
+    end
+
     def capture_screenshot
       trigger_callback(:on_action_start, 'capture_screenshot', {})
 
@@ -64,6 +89,23 @@ module Charai
 
       begin
         result = @browsing_context.default_realm.script_evaluate(script)
+      rescue BrowsingContext::Realm::ScriptEvaluationError => e
+        result = e.message
+      end
+
+      notify_to_sender(result) unless "#{result}" == ''
+
+      result
+    end
+
+    def execute_script_with_ref(ref, element_function_declaration)
+      resolved = resolve_selector_for_ref(ref)
+      trigger_callback(:on_action_start, 'execute_script_with_ref', { script: element_function_declaration, ref: ref, selector: resolved[:selector] })
+
+      begin
+        result = @browsing_context.default_realm.script_call_function(
+          element_function_declaration,
+          arguments: [resolved[:element_handle]])
       rescue BrowsingContext::Realm::ScriptEvaluationError => e
         result = e.message
       end
@@ -172,6 +214,23 @@ module Charai
         @callback.public_send(method_name, ...)
       elsif @callback.is_a?(Hash) && @callback[method_name].is_a?(Proc)
         @callback[method_name].call(...)
+      end
+    end
+
+    def resolve_selector_for_ref(ref)
+      @browsing_context.default_realm._with_injected_script do |script|
+        parsed = script.call(:parseSelector, "aria-ref=#{ref}")
+
+        # ensure ref is attached.
+        body_handle = script.getprop("document.body", as_handle: true)
+        script.call(:ariaSnapshot, body_handle, { mode: 'ai' })
+
+        document_handle = script.getprop('document', as_handle: true)
+        element_handle = script.call(:querySelector, parsed, document_handle, false, as_handle: true)
+
+        selector = script.call(:generateSelectorSimple, element_handle, { omitInternalEngines: true })
+
+        { selector: selector, element_handle: element_handle }
       end
     end
 

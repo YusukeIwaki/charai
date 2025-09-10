@@ -129,6 +129,42 @@ module Charai
       driver.capture_screenshot
       ```
 
+      `driver.capture_screenshot` は画像を返しますが、とても大きなデータを必要としますので、本当に見た目を確認する必要がある場合にのみ使用してください。
+      通常は `driver.aria_snapshot(ref: true)` を使用して、ARIAスナップショットを確認します。
+
+      ```
+      driver.aria_snapshot(ref: true)
+      ```
+
+      が実行されると、私が以下のように実行結果を返します。
+
+      ```
+      - generic [active] [ref=e1]:
+        - heading "Login form" [level=1] [ref=e2]
+        - generic [ref=e3]:
+          - generic [ref=e4]:
+            - generic [ref=e5]: Email
+            - textbox "Email" [ref=e6]
+          - generic [ref=e7]:
+            - generic [ref=e8]: Password
+            - textbox "Password" [ref=e9]
+          - button "LOGIN" [ref=e10]
+      ```
+
+      refの値を使用して、その要素に関連した関数の実行を行うことができます。たとえば、Email入力欄のDOMの領域を取得したい場合には
+
+      ```
+      driver.execute_script_with_ref(:e6, "el => JSON.stringify(el.getBoundingClientRect())")
+      ```
+
+      このように実行すれば、私が以下のように実行結果を返します。
+
+      ```
+      {"top":396.25,"right":638.4140625,"bottom":422.25,"left":488.4140625,"width":150,"height":26,"x":488.4140625,"y":396.25}
+      ```
+
+      多くの場合には、スクリーンショットを取得するよりもこちらの方法を使用したほうが、効率的に画面の状態を確認できます。
+
       ### 注意点
       * ログイン後のダッシュボード画面に遷移したと判断したら `driver.assertion_ok("ログイン後のダッシュボード画面に遷移すること")` のような指示だけ出力してください。5回やってもうまくいかない場合には `driver.assertion_fail("ログイン後のダッシュボード画面に遷移すること")` のような指示だけ出力してください。
       * 必ず、画像を見てクリックする場所がどこかを判断して `driver.click` を実行するようにしてください。場所がわからない場合には `driver.execute_script` を活用して、要素の場所を確認してください。 `driver.execute_script` を呼ぶと、私がJavaScriptの実行結果をアップロードします。現在のDOMの内容を確認したいときにも `driver.execute_script` は使用できます。例えば `driver.execute_script('document.body.innerHTML')` を実行すると現在のDOMのBodyのHTMLを取得することができます。
@@ -137,7 +173,7 @@ module Charai
       * 一覧画面などでは、画面の一部だけがスクロールすることもあります。その場合には、スクロールする要素を特定して、その要素の位置を取得してからスクロール操作を行ってください。
       * 実行すべきコードは必ず "```" を使用したコードブロックで囲んでください。コードブロックに囲まれていないコードは実行されません。
       * `driver.execute_script` を複数実行した場合には、私は最後の結果だけをアップロードしますので、getBoundingClientRectを複数回使用する場合には、１回ずつ分けて指示してください。
-      * 最後に実行された内容が `driver.capture_screenshot` または `driver.execute_script` ではない場合には、会話が強制終了してしまいますので、操作を続ける必要がある場合には `driver.execute_script` または `driver.capture_screenshot` を最後に実行してください。
+      * 最後に実行された内容が `driver.capture_screenshot` または `driver.execute_script` または `driver.execute_script_with_ref` ではない場合には、会話が強制終了してしまいますので、操作を続ける必要がある場合には `driver.execute_script` または `driver.execute_script_with_ref` または `driver.capture_screenshot` を最後に実行してください。
 
       #{@additional_instruction ? "### 補足説明\n#{@additional_instruction}" : ""}
 
