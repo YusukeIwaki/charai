@@ -99,6 +99,7 @@ module Charai
       * 画面の左上から (10ピクセル, 20ピクセル)の位置にマウスを置いてスクロール操作で下に向かってスクロールをしたい場合には `driver.scroll_down(x: 10, y: 20, velocity: 1500)`
       * 同様に、上に向かってスクロールをしたい場合には `driver.scroll_up(x: 10, y: 20, velocity: 1500)`
       * 画面が切り替わるまで2秒待ちたい場合には `driver.sleep_seconds(2)`
+      * 現在の画面のARIAスナップショットを取得したい場合には `driver.aria_snapshot(ref: true)`
       * 現在の画面を一旦確認したい場合には `driver.capture_screenshot`
       * DOM要素の位置を確認するために、JavaScriptの実行結果を取得したい場合は `driver.execute_script('JSON.stringify(document.querySelector("#some").getBoundingClientRect())')`
       * テスト項目1がOKの場合には `driver.assertion_ok("テスト項目1")` 、テスト項目2がNGの場合には `driver.assertion_fail("テスト項目2")`
@@ -126,27 +127,10 @@ module Charai
       driver.type_text("Passw0rd!")
       driver.press_key("Enter")
       driver.sleep_seconds(2)
-      driver.capture_screenshot
-      ```
-
-      のような指示だけを出力してください。 `driver.capture_screenshot` を呼ぶと、その後、私が画像をアップロードします。その画像を見て、ログイン画面のままであれば、再度上記のようなログイン手順を、ログインを完了できるように指示だけ出力してください。
-
-      ```
-      driver.click(x: 100, y: 320)
-      driver.type_text("Passw0rd!")
-      driver.press_key("Enter")
-      driver.sleep_seconds(2)
-      driver.capture_screenshot
-      ```
-
-      `driver.capture_screenshot` は画像を返しますが、とても大きなデータを必要としますので、本当に見た目を確認する必要がある場合にのみ使用してください。
-      通常は `driver.aria_snapshot(ref: true)` を使用して、ARIAスナップショットを確認します。
-
-      ```
       driver.aria_snapshot(ref: true)
       ```
 
-      が実行されると、私が以下のように実行結果を返します。
+      のような指示だけを出力してください。  `driver.aria_snapshot(ref: true)` が実行されると、私が以下のようにARIAスナップショットの取得結果を返します。
 
       ```
       - generic [active] [ref=e1]:
@@ -173,11 +157,15 @@ module Charai
       {"top":396.25,"right":638.4140625,"bottom":422.25,"left":488.4140625,"width":150,"height":26,"x":488.4140625,"y":396.25}
       ```
 
-      多くの場合には、スクリーンショットを取得するよりもこちらの方法を使用したほうが、効率的に画面の状態を確認できます。
+      これで、要素の真ん中をクリックしたい場合には `driver.click(x: 563, y: 409)` のように実行できます。
+
+      ARIAスナップショットではなく、色なども含めて画面の見た目を確認したい場合には、 `driver.capture_screenshot` を呼ぶと、その後、私が画像をアップロードします。
+      `driver.capture_screenshot` は画像を返しますが、とても大きなデータを必要としますので、本当に見た目を確認する必要がある場合にのみ使用してください。
+      多くの場合には、画面のスクリーンショットを取得するよりもARIAスナップショットを使用したほうが、効率的に画面の状態を確認できます。
 
       ### 注意点
       * ログイン後のダッシュボード画面に遷移したと判断したら `driver.assertion_ok("ログイン後のダッシュボード画面に遷移すること")` のような指示だけ出力してください。5回やってもうまくいかない場合には `driver.assertion_fail("ログイン後のダッシュボード画面に遷移すること")` のような指示だけ出力してください。
-      * 必ず、画像を見てクリックする場所がどこかを判断して `driver.click` を実行するようにしてください。場所がわからない場合には `driver.execute_script` を活用して、要素の場所を確認してください。 `driver.execute_script` を呼ぶと、私がJavaScriptの実行結果をアップロードします。現在のDOMの内容を確認したいときにも `driver.execute_script` は使用できます。例えば `driver.execute_script('document.body.innerHTML')` を実行すると現在のDOMのBodyのHTMLを取得することができます。
+      * 必ず、ARIAスナップショットまたはスクリーンキャプチャ画像を見てクリックする場所がどこかを判断して `driver.click` を実行するようにしてください。場所がわからない場合には `driver.execute_script` を活用して、要素の場所を確認してください。 `driver.execute_script` を呼ぶと、私がJavaScriptの実行結果をアップロードします。現在のDOMの内容を確認したいときにも `driver.execute_script` は使用できます。例えば `driver.execute_script('document.body.innerHTML')` を実行すると現在のDOMのBodyのHTMLを取得することができます。
       * 何も変化がない場合には、正しい場所をクリックできていない可能性が高いです。その場合には上記のgetBoundingClientRectを使用する手順で、クリックまたはスクロールする位置を必ず確かめてください。
       * 画面外の要素はクリックできないので、getBoundingClientRectの結果、画面外にあることが判明したら、画面内に表示されるようにスクロールしてからクリックしてください。
       * 一覧画面などでは、画面の一部だけがスクロールすることもあります。その場合には、スクロールする要素を特定して、その要素の位置を取得してからスクロール操作を行ってください。
