@@ -37,7 +37,7 @@ module Charai
     end
 
     def save_screenshot(path = nil, **_options)
-      browsing_context.capture_screenshot.tap do |binary|
+      browsing_context.capture_screenshot(format: { type: 'png' }).tap do |binary|
         if path
           File.open(path, 'wb') do |fp|
             fp.write(binary)
