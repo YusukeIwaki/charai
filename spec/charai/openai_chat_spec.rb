@@ -19,8 +19,8 @@ RSpec.describe Charai::OpenaiChat, skip: ENV['CI'] do
     #   model: 'llava:34b' # 'llama-3-elyza-jp-8b:latest',
     # )
     Charai::AzureOpenaiConfiguration.new(
-      endpoint_url: ENV['OPENAI_ENDPOINT_URL'],
-      api_key: ENV['OPENAI_API_KEY'],
+      endpoint_url: ENV['AZURE_OPENAI_ENDPOINT_URL'],
+      api_key: ENV['AZURE_OPENAI_API_KEY'],
     )
     # Charai::GeminiOpenaiConfiguration.new(
     #   model: 'gemini-1.5-flash'

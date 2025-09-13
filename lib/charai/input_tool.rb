@@ -60,7 +60,7 @@ module Charai
       trigger_callback(:on_action_start, 'capture_screenshot', {})
 
       current_url = @browsing_context.url
-      @browsing_context.capture_screenshot(format: 'png').tap do |binary|
+      @browsing_context.capture_screenshot(format: { type: 'png' }).tap do |binary|
         if @message_sender
           message = Agent::Message.new(
             text: "Capture of #{current_url}",
