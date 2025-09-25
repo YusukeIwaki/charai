@@ -5,6 +5,14 @@
 
 Chat + Ruby + AI = Charai
 
+Charai is an AI-powered Capybara driver that enables natural language web testing. Write your E2E tests by describing what you want to test in plain language, and let AI handle the browser interactions.
+
+## Requirements
+
+- Ruby 2.7 or higher
+- Firefox Developer Edition
+- OpenAI API key or compatible AI service (Azure OpenAI, Gemini, Ollama)
+
 ## Setup
 
 Add `gem 'charai'` into your project's Gemfile, and then `bundle install`
@@ -41,16 +49,75 @@ config = Charai::OpenaiConfiguration.new(
 
 ### Azure OpenAI (Recommended)
 
-```
+```ruby
 config = Charai::AzureOpenaiConfiguration.new(
   endpoint_url: 'https://YOUR-APP.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-05-01-preview',
   api_key: 'aabbcc00112233445566'
 )
 ```
 
+**⚠️ Important Note for Azure OpenAI Environment Variables:**
+
+When setting the endpoint URL via environment variables, you must include the full path with `/deployments/{model}/chat/completions`:
+
+```bash
+# ❌ This will NOT work
+export AZURE_OPENAI_ENDPOINT_URL="https://your-resource.cognitiveservices.azure.com/openai/responses?api-version=2025-04-01-preview"
+
+# ✅ This works correctly
+export AZURE_OPENAI_ENDPOINT_URL="https://your-resource.cognitiveservices.azure.com/openai/deployments/gpt-4o-mini/chat/completions?api-version=2025-04-01-preview"
+```
+
+The endpoint URL must specify:
+1. Your Azure resource endpoint
+2. The deployment name (e.g., `gpt-4o-mini`, `gpt-4o`)
+3. The `/chat/completions` path
+4. The API version parameter
+
+### Gemini
+
+```ruby
+config = Charai::GeminiOpenaiConfiguration.new(
+  model: 'gemini-2.0-flash-exp',
+  api_key: 'your-gemini-api-key'
+)
+```
+
+### Ollama (Local AI)
+
+```ruby
+config = Charai::OllamaConfiguration.new(
+  endpoint_url: 'http://localhost:11434',
+  model: 'llama3.2'
+)
+```
+
 ## Usage
 
-Since this driver works with the OpenAI service, we can easily describe E2E test like below :)
+### Basic Example
+
+```ruby
+RSpec.describe "Login test", type: :feature do
+  before do
+    Capybara.current_driver = :charai
+  end
+
+  it "should login successfully" do
+    page.driver << <<~MARKDOWN
+    * Navigate to the login page
+    * Enter "user@example.com" in the email field
+    * Enter "password123" in the password field
+    * Click the login button
+    * Verify that you're redirected to the dashboard page
+    * Check that the username "John Doe" is displayed in the header
+    MARKDOWN
+  end
+end
+```
+
+### Advanced Example with Instructions
+
+You can provide additional context about your application to help the AI better understand the page structure:
 
 ```ruby
 before do
@@ -165,7 +232,47 @@ config.around(:each, type: :feature) do |example|
 end
 ```
 
-With this report, we can check evidences for each test and investigate failed tests (postmotem).
+With this report, we can check evidences for each test and investigate failed tests (postmortem).
+
+## Troubleshooting
+
+### Firefox Developer Edition not found
+
+Make sure Firefox Developer Edition is installed in the correct location:
+- macOS: `/Applications/Firefox Developer Edition.app`
+- Linux: `/usr/bin/firefox-devedition`
+
+You can also set a custom path:
+```ruby
+Charai::Driver.new(app,
+  openai_configuration: config,
+  firefox_path: '/path/to/firefox-dev'
+)
+```
+
+### AI not understanding the page
+
+Provide more context using `additional_instruction`:
+```ruby
+page.driver.additional_instruction = <<~MARKDOWN
+  * This is a single-page application (SPA)
+  * Wait for elements to load before interacting
+  * The main navigation is in a hamburger menu on mobile
+MARKDOWN
+```
+
+### Tests running slowly
+
+Consider using a faster AI model or running in headless mode:
+```ruby
+Capybara.current_driver = :charai_headless
+```
+
+## Links
+
+- [GitHub Repository](https://github.com/YusukeIwaki/charai)
+- [RubyGems Page](https://rubygems.org/gems/charai)
+- [Report Issues](https://github.com/YusukeIwaki/charai/issues)
 
 ## License
 

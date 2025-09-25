@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email = ["q7w8e9w8q7w8e9@yahoo.co.jp"]
 
   spec.summary = "charai(Chat + Ruby + AI) Capybara driver"
-  spec.description = "Prototype impl for Kaigi on Rails 2024 presentation."
+  spec.description = "Prototype impl for Kaigi on Rails 2024 & 2025 presentation."
   spec.homepage = "https://github.com/YusukeIwaki/charai"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
